@@ -9,16 +9,17 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 @Composable
 fun OsmMapFullScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showMyLocation: Boolean = false
 ) {
     val context = LocalContext.current
 
-    // SharedPreferences "modernas", sin PreferenceManager deprecado
     val prefs = context.getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
-
     Configuration.getInstance().load(context, prefs)
     Configuration.getInstance().userAgentValue = context.packageName
 
@@ -32,9 +33,20 @@ fun OsmMapFullScreen(
                 val mapController = controller
                 mapController.setZoom(15.0)
 
-                // Ejemplo: Madrid
-                val startPoint = GeoPoint(40.4168, -3.7038)
+                // Punto inicial (por si no hay GPS todavía)
+                val startPoint = GeoPoint(40.4168, -3.7038) // Madrid
                 mapController.setCenter(startPoint)
+
+                if (showMyLocation) {
+                    val locationOverlay = MyLocationNewOverlay(
+                        GpsMyLocationProvider(ctx),
+                        this
+                    ).apply {
+                        enableMyLocation()      // Empieza a escuchar ubicación
+                        enableFollowLocation()  // Mueve la cámara a tu posición
+                    }
+                    overlays.add(locationOverlay)
+                }
             }
         }
     )
