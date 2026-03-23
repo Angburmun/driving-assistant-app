@@ -63,4 +63,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.android.sdk)
+    implementation("org.maplibre.gl:android-sdk:13.0.1")
+    implementation("org.maplibre.navigation:navigation-ui-android:5.0.0-pre12")
 }
