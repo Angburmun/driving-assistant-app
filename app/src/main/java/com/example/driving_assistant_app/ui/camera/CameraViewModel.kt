@@ -23,4 +23,16 @@ class CameraViewModel : ViewModel() {
             rotationDegrees = rotationDegrees
         )
     }
+
+    fun onFramePrepared(
+        modelInputWidth: Int,
+        modelInputHeight: Int
+    ) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            preparedFrameCount = current.preparedFrameCount + 1,
+            modelInputWidth = modelInputWidth,
+            modelInputHeight = modelInputHeight
+        )
+    }
 }

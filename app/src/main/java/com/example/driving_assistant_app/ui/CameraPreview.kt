@@ -15,12 +15,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.driving_assistant_app.ml.FrameAnalyzer
 import java.util.concurrent.Executors
+
+private const val MODEL_INPUT_SIZE = 640
 
 @Composable
 fun CameraPreview(
     modifier: Modifier = Modifier,
-    onFrameAnalyzed: (width: Int, height: Int, rotationDegrees: Int) -> Unit
+    onFrameAnalyzed: (width: Int, height: Int, rotationDegrees: Int) -> Unit,
+    onFramePrepared: (modelInputWidth: Int, modelInputHeight: Int) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -44,24 +48,22 @@ fun CameraPreview(
                 .build()
                 .also { it.surfaceProvider = previewView.surfaceProvider }
 
+            val frameAnalyzer = FrameAnalyzer(
+                modelInputSize = MODEL_INPUT_SIZE,
+                minAnalysisIntervalMs = 100L,
+                onFramePrepared = { sourceWidth, sourceHeight, rotation, modelWidth, modelHeight ->
+                    onFrameAnalyzed(sourceWidth, sourceHeight, rotation)
+                    onFramePrepared(modelWidth, modelHeight)
+                }
+            )
+
             val imageAnalysis = ImageAnalysis.Builder()
                 .setTargetResolution(Size(1280, 720))
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
 
-            imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                try {
-                    onFrameAnalyzed(
-                        imageProxy.width,
-                        imageProxy.height,
-                        imageProxy.imageInfo.rotationDegrees
-                    )
-                } catch (e: Exception) {
-                    Log.e("CameraPreview", "Frame analysis failed", e)
-                } finally {
-                    imageProxy.close()
-                }
-            }
+            imageAnalysis.setAnalyzer(cameraExecutor, frameAnalyzer)
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 

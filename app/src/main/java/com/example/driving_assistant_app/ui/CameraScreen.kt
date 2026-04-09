@@ -64,6 +64,9 @@ fun CameraScreen(
                 modifier = Modifier.fillMaxSize(),
                 onFrameAnalyzed = { width, height, rotation ->
                     viewModel.onFrameAnalyzed(width, height, rotation)
+                },
+                onFramePrepared = { modelWidth, modelHeight ->
+                    viewModel.onFramePrepared(modelWidth, modelHeight)
                 }
             )
 
@@ -72,6 +75,9 @@ fun CameraScreen(
                 width = uiState.frameWidth,
                 height = uiState.frameHeight,
                 rotation = uiState.rotationDegrees,
+                preparedFrameCount = uiState.preparedFrameCount,
+                modelInputWidth = uiState.modelInputWidth,
+                modelInputHeight = uiState.modelInputHeight,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
@@ -119,6 +125,9 @@ private fun CameraInfoCard(
     width: Int,
     height: Int,
     rotation: Int,
+    preparedFrameCount: Long,
+    modelInputWidth: Int,
+    modelInputHeight: Int,
     modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier) {
@@ -135,11 +144,19 @@ private fun CameraInfoCard(
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Resolution: ${width}×${height}",
+                text = "Camera frame: ${width}×${height}",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
                 text = "Rotation: $rotation°",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Prepared frames: $preparedFrameCount",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Model input: ${modelInputWidth}×${modelInputHeight}",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
