@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.driving_assistant_app.ml.FrameAnalyzer
+import com.example.driving_assistant_app.ml.YoloDetection
 import com.example.driving_assistant_app.ml.YoloDetector
 import java.util.concurrent.Executors
 
@@ -27,7 +28,7 @@ fun CameraPreview(
     modifier: Modifier = Modifier,
     onFrameAnalyzed: (width: Int, height: Int, rotationDegrees: Int) -> Unit,
     onFramePrepared: (modelInputWidth: Int, modelInputHeight: Int) -> Unit,
-    onInferenceCompleted: (topClassIndex: Int, topScore: Float, inferenceTimeMs: Float) -> Unit
+    onDetectionsReady: (detections: List<YoloDetection>, inferenceTimeMs: Float) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -60,9 +61,7 @@ fun CameraPreview(
                     onFrameAnalyzed(sourceWidth, sourceHeight, rotation)
                     onFramePrepared(modelWidth, modelHeight)
                 },
-                onInferenceCompleted = { topClassIndex, topScore, inferenceTimeMs ->
-                    onInferenceCompleted(topClassIndex, topScore, inferenceTimeMs)
-                }
+                onDetectionsReady = onDetectionsReady
             )
 
             val imageAnalysis = ImageAnalysis.Builder()

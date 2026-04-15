@@ -69,9 +69,14 @@ fun CameraScreen(
                 onFramePrepared = { modelWidth, modelHeight ->
                     viewModel.onFramePrepared(modelWidth, modelHeight)
                 },
-                onInferenceCompleted = { topClassIndex, topScore, inferenceTimeMs ->
-                    viewModel.onInferenceCompleted(topClassIndex, topScore, inferenceTimeMs)
+                onDetectionsReady = { detections, inferenceTimeMs ->
+                    viewModel.onDetectionsReady(detections, inferenceTimeMs)
                 }
+            )
+
+            DetectionOverlay(
+                detections = uiState.detections,
+                modifier = Modifier.fillMaxSize()
             )
 
             CameraInfoCard(
@@ -80,14 +85,13 @@ fun CameraScreen(
                 height = uiState.frameHeight,
                 rotation = uiState.rotationDegrees,
                 preparedFrameCount = uiState.preparedFrameCount,
-                topClassIndex = uiState.topClassIndex,
-                topScore = uiState.topScore,
-                inferenceTimeMs = uiState.inferenceTimeMs,
                 modelInputWidth = uiState.modelInputWidth,
                 modelInputHeight = uiState.modelInputHeight,
                 isModelLoading = uiState.isModelLoading,
                 modelInfo = uiState.modelInfo,
                 modelError = uiState.modelError,
+                detections = uiState.detections,
+                inferenceTimeMs = uiState.inferenceTimeMs,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
@@ -136,15 +140,15 @@ private fun CameraInfoCard(
     height: Int,
     rotation: Int,
     preparedFrameCount: Long,
-    topClassIndex: Int,
-    topScore: Float,
-    inferenceTimeMs: Float,
     modelInputWidth: Int,
     modelInputHeight: Int,
     isModelLoading: Boolean,
     modelInfo: com.example.driving_assistant_app.ml.ModelInfo?,
     modelError: String?,
+    detections: List<com.example.driving_assistant_app.ml.YoloDetection>,
+    inferenceTimeMs: Float,
     modifier: Modifier = Modifier
+
 ) {
     Card(modifier = modifier) {
         Column(
@@ -183,14 +187,21 @@ private fun CameraInfoCard(
             )
 
             Text(
-                text = "Top class index: $topClassIndex",
+                text = "Detections: ${detections.size}",
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Text(
-                text = "Top score: ${"%.3f".format(topScore)}",
+                text = "Inference: ${"%.1f".format(inferenceTimeMs)} ms",
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            detections.take(3).forEach { det ->
+                Text(
+                    text = "${det.className} ${"%.2f".format(det.score)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Text(
                 text = "Inference: ${"%.1f".format(inferenceTimeMs)} ms",

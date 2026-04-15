@@ -16,9 +16,8 @@ class FrameAnalyzer(
         modelInputWidth: Int,
         modelInputHeight: Int
     ) -> Unit,
-    private val onInferenceCompleted: (
-        topClassIndex: Int,
-        topScore: Float,
+    private val onDetectionsReady: (
+        detections: List<YoloDetection>,
         inferenceTimeMs: Float
     ) -> Unit
 ) : ImageAnalysis.Analyzer {
@@ -53,14 +52,8 @@ class FrameAnalyzer(
                 modelBitmap.height
             )
 
-            val inferenceResult = detector.detect(modelBitmap)
-            val topDetection = inferenceResult.detections.firstOrNull()
-
-            onInferenceCompleted(
-                topDetection?.classIndex ?: -1,
-                topDetection?.score ?: 0f,
-                inferenceResult.inferenceTimeMs
-            )
+            val result = detector.detect(modelBitmap)
+            onDetectionsReady(result.detections, result.inferenceTimeMs)
 
             modelBitmap.recycle()
         } catch (e: Exception) {

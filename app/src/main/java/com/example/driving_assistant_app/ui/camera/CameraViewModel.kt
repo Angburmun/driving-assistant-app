@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.driving_assistant_app.ml.LiteRtModelInspector
+import com.example.driving_assistant_app.ml.YoloDetection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -76,15 +77,13 @@ class CameraViewModel : ViewModel() {
         }
     }
 
-    fun onInferenceCompleted(
-        topClassIndex: Int,
-        topScore: Float,
+    fun onDetectionsReady(
+        detections: List<YoloDetection>,
         inferenceTimeMs: Float
     ) {
         val current = _uiState.value
         _uiState.value = current.copy(
-            topClassIndex = topClassIndex,
-            topScore = topScore,
+            detections = detections,
             inferenceTimeMs = inferenceTimeMs
         )
     }

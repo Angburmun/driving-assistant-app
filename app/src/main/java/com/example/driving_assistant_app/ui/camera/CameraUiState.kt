@@ -1,6 +1,7 @@
 package com.example.driving_assistant_app.ui.camera
 
 import com.example.driving_assistant_app.ml.ModelInfo
+import com.example.driving_assistant_app.ml.YoloDetection
 
 data class CameraUiState(
     val frameCount: Long = 0,
@@ -13,7 +14,6 @@ data class CameraUiState(
     val isModelLoading: Boolean = false,
     val modelInfo: ModelInfo? = null,
     val modelError: String? = null,
-    val topClassIndex: Int = -1,
-    val topScore: Float = 0f,
+    val detections: List<YoloDetection> = emptyList(),
     val inferenceTimeMs: Float = 0f
 )
