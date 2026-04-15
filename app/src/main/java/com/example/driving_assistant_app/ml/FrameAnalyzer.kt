@@ -7,13 +7,19 @@ import androidx.camera.core.ImageProxy
 
 class FrameAnalyzer(
     private val modelInputSize: Int,
-    private val minAnalysisIntervalMs: Long = 100L,
+    private val detector: YoloDetector,
+    private val minAnalysisIntervalMs: Long = 150L,
     private val onFramePrepared: (
         sourceWidth: Int,
         sourceHeight: Int,
         rotationDegrees: Int,
         modelInputWidth: Int,
         modelInputHeight: Int
+    ) -> Unit,
+    private val onInferenceCompleted: (
+        topClassIndex: Int,
+        topScore: Float,
+        inferenceTimeMs: Float
     ) -> Unit
 ) : ImageAnalysis.Analyzer {
 
@@ -47,9 +53,18 @@ class FrameAnalyzer(
                 modelBitmap.height
             )
 
+            val inferenceResult = detector.detect(modelBitmap)
+            val topDetection = inferenceResult.detections.firstOrNull()
+
+            onInferenceCompleted(
+                topDetection?.classIndex ?: -1,
+                topDetection?.score ?: 0f,
+                inferenceResult.inferenceTimeMs
+            )
+
             modelBitmap.recycle()
         } catch (e: Exception) {
-            Log.e("FrameAnalyzer", "Failed to preprocess frame", e)
+            Log.e("FrameAnalyzer", "Failed to analyze frame", e)
         } finally {
             imageProxy.close()
         }

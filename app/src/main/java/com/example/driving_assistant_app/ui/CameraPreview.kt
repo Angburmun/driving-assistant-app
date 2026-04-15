@@ -16,15 +16,18 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.driving_assistant_app.ml.FrameAnalyzer
+import com.example.driving_assistant_app.ml.YoloDetector
 import java.util.concurrent.Executors
 
 private const val MODEL_INPUT_SIZE = 640
+private const val MODEL_ASSET_PATH = "models/yolo11n_float32.tflite"
 
 @Composable
 fun CameraPreview(
     modifier: Modifier = Modifier,
     onFrameAnalyzed: (width: Int, height: Int, rotationDegrees: Int) -> Unit,
-    onFramePrepared: (modelInputWidth: Int, modelInputHeight: Int) -> Unit
+    onFramePrepared: (modelInputWidth: Int, modelInputHeight: Int) -> Unit,
+    onInferenceCompleted: (topClassIndex: Int, topScore: Float, inferenceTimeMs: Float) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -37,6 +40,7 @@ fun CameraPreview(
     }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    val detector = remember { YoloDetector(context, MODEL_ASSET_PATH) }
 
     DisposableEffect(lifecycleOwner, previewView) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -50,10 +54,14 @@ fun CameraPreview(
 
             val frameAnalyzer = FrameAnalyzer(
                 modelInputSize = MODEL_INPUT_SIZE,
-                minAnalysisIntervalMs = 100L,
+                detector = detector,
+                minAnalysisIntervalMs = 150L,
                 onFramePrepared = { sourceWidth, sourceHeight, rotation, modelWidth, modelHeight ->
                     onFrameAnalyzed(sourceWidth, sourceHeight, rotation)
                     onFramePrepared(modelWidth, modelHeight)
+                },
+                onInferenceCompleted = { topClassIndex, topScore, inferenceTimeMs ->
+                    onInferenceCompleted(topClassIndex, topScore, inferenceTimeMs)
                 }
             )
 
@@ -92,6 +100,7 @@ fun CameraPreview(
             } catch (e: Exception) {
                 Log.e("CameraPreview", "Failed to unbind camera", e)
             }
+            detector.close()
             cameraExecutor.shutdown()
         }
     }

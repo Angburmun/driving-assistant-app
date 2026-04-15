@@ -53,6 +53,7 @@ fun CameraScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.loadModelIfNeeded(context)
         if (!hasCameraPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
@@ -67,6 +68,9 @@ fun CameraScreen(
                 },
                 onFramePrepared = { modelWidth, modelHeight ->
                     viewModel.onFramePrepared(modelWidth, modelHeight)
+                },
+                onInferenceCompleted = { topClassIndex, topScore, inferenceTimeMs ->
+                    viewModel.onInferenceCompleted(topClassIndex, topScore, inferenceTimeMs)
                 }
             )
 
@@ -76,8 +80,14 @@ fun CameraScreen(
                 height = uiState.frameHeight,
                 rotation = uiState.rotationDegrees,
                 preparedFrameCount = uiState.preparedFrameCount,
+                topClassIndex = uiState.topClassIndex,
+                topScore = uiState.topScore,
+                inferenceTimeMs = uiState.inferenceTimeMs,
                 modelInputWidth = uiState.modelInputWidth,
                 modelInputHeight = uiState.modelInputHeight,
+                isModelLoading = uiState.isModelLoading,
+                modelInfo = uiState.modelInfo,
+                modelError = uiState.modelError,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
@@ -126,8 +136,14 @@ private fun CameraInfoCard(
     height: Int,
     rotation: Int,
     preparedFrameCount: Long,
+    topClassIndex: Int,
+    topScore: Float,
+    inferenceTimeMs: Float,
     modelInputWidth: Int,
     modelInputHeight: Int,
+    isModelLoading: Boolean,
+    modelInfo: com.example.driving_assistant_app.ml.ModelInfo?,
+    modelError: String?,
     modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier) {
@@ -156,9 +172,83 @@ private fun CameraInfoCard(
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Model input: ${modelInputWidth}×${modelInputHeight}",
+                text = "Prepared input: ${modelInputWidth}×${modelInputHeight}",
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            Text(
+                text = "Model",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Text(
+                text = "Top class index: $topClassIndex",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Top score: ${"%.3f".format(topScore)}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Inference: ${"%.1f".format(inferenceTimeMs)} ms",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            when {
+                isModelLoading -> {
+                    Text(
+                        text = "Loading model...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                modelError != null -> {
+                    Text(
+                        text = "Model error: $modelError",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                modelInfo != null -> {
+                    Text(
+                        text = "Path: ${modelInfo.modelPath}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Text(
+                        text = "Inputs: ${modelInfo.inputTensors.size}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    modelInfo.inputTensors.forEach { tensor ->
+                        Text(
+                            text = "In[${tensor.index}] ${tensor.dataType} ${tensor.shapeAsString()}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    Text(
+                        text = "Outputs: ${modelInfo.outputTensors.size}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    modelInfo.outputTensors.forEach { tensor ->
+                        Text(
+                            text = "Out[${tensor.index}] ${tensor.dataType} ${tensor.shapeAsString()}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                else -> {
+                    Text(
+                        text = "Model not loaded yet.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }
