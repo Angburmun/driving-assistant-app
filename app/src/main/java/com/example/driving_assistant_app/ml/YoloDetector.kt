@@ -12,6 +12,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import kotlin.math.max
 import kotlin.math.min
+import com.example.driving_assistant_app.ml.ModelConfig
 
 class YoloDetector(
     context: Context,
@@ -40,7 +41,7 @@ class YoloDetector(
         val inputBuffer = bitmapToInputBuffer(bitmap)
 
         val output = Array(1) {
-            Array(84) {
+            Array(47) {
                 FloatArray(8400)
             }
         }
@@ -88,7 +89,7 @@ class YoloDetector(
         confidenceThreshold: Float
     ): List<YoloDetection> {
         val detections = mutableListOf<YoloDetection>()
-        val numClasses = 80
+        val numClasses = ModelConfig.NUM_CLASSES
         val numCandidates = 8400
 
         for (i in 0 until numCandidates) {
@@ -120,7 +121,7 @@ class YoloDetector(
             detections.add(
                 YoloDetection(
                     classIndex = bestClassIndex,
-                    className = CocoLabels.labels.getOrElse(bestClassIndex) { "class_$bestClassIndex" },
+                    className = ModelConfig.LABELS.getOrElse(bestClassIndex) { "class_$bestClassIndex" },
                     score = bestScore,
                     left = left,
                     top = top,

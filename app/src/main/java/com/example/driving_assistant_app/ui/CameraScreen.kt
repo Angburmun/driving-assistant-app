@@ -76,6 +76,9 @@ fun CameraScreen(
 
             DetectionOverlay(
                 detections = uiState.detections,
+                sourceFrameWidth = uiState.frameWidth,
+                sourceFrameHeight = uiState.frameHeight,
+                rotationDegrees = uiState.rotationDegrees,
                 modifier = Modifier.fillMaxSize()
             )
 

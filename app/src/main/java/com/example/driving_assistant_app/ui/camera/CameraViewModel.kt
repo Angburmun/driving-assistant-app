@@ -5,13 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.driving_assistant_app.ml.LiteRtModelInspector
 import com.example.driving_assistant_app.ml.YoloDetection
+import com.example.driving_assistant_app.ml.ModelConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-private const val MODEL_ASSET_PATH = "models/yolo11n_float32.tflite"
 
 class CameraViewModel : ViewModel() {
 
@@ -59,7 +58,7 @@ class CameraViewModel : ViewModel() {
             try {
                 val modelInfo = LiteRtModelInspector.inspectModel(
                     context = context.applicationContext,
-                    assetPath = MODEL_ASSET_PATH
+                    assetPath = ModelConfig.MODEL_ASSET_PATH
                 )
 
                 _uiState.value = _uiState.value.copy(

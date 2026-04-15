@@ -18,10 +18,8 @@ import androidx.core.content.ContextCompat
 import com.example.driving_assistant_app.ml.FrameAnalyzer
 import com.example.driving_assistant_app.ml.YoloDetection
 import com.example.driving_assistant_app.ml.YoloDetector
+import com.example.driving_assistant_app.ml.ModelConfig
 import java.util.concurrent.Executors
-
-private const val MODEL_INPUT_SIZE = 640
-private const val MODEL_ASSET_PATH = "models/yolo11n_float32.tflite"
 
 @Composable
 fun CameraPreview(
@@ -41,7 +39,7 @@ fun CameraPreview(
     }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-    val detector = remember { YoloDetector(context, MODEL_ASSET_PATH) }
+    val detector = remember { YoloDetector(context, ModelConfig.MODEL_ASSET_PATH) }
 
     DisposableEffect(lifecycleOwner, previewView) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -54,7 +52,7 @@ fun CameraPreview(
                 .also { it.surfaceProvider = previewView.surfaceProvider }
 
             val frameAnalyzer = FrameAnalyzer(
-                modelInputSize = MODEL_INPUT_SIZE,
+                modelInputSize = ModelConfig.MODEL_INPUT_SIZE,
                 detector = detector,
                 minAnalysisIntervalMs = 150L,
                 onFramePrepared = { sourceWidth, sourceHeight, rotation, modelWidth, modelHeight ->
