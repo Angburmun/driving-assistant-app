@@ -1,8 +1,11 @@
 package com.example.driving_assistant_app.ml
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Matrix
+import android.graphics.Paint
 import androidx.camera.core.ImageProxy
+import kotlin.math.roundToInt
 
 object FramePreprocessor {
 
@@ -54,20 +57,35 @@ object FramePreprocessor {
         return rotated
     }
 
-    fun centerCropToSquare(source: Bitmap): Bitmap {
-        val side = minOf(source.width, source.height)
-        val x = (source.width - side) / 2
-        val y = (source.height - side) / 2
+    fun letterboxResize(source: Bitmap, size: Int): Bitmap {
+        val srcWidth = source.width
+        val srcHeight = source.height
 
-        val cropped = Bitmap.createBitmap(source, x, y, side, side)
-        source.recycle()
-        return cropped
-    }
+        val scale = minOf(
+            size / srcWidth.toFloat(),
+            size / srcHeight.toFloat()
+        )
 
-    fun resize(source: Bitmap, size: Int): Bitmap {
-        val resized = Bitmap.createScaledBitmap(source, size, size, true)
+        val dstWidth = (srcWidth * scale).roundToInt()
+        val dstHeight = (srcHeight * scale).roundToInt()
+
+        val left = (size - dstWidth) / 2
+        val top = (size - dstHeight) / 2
+
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        val paint = Paint(Paint.FILTER_BITMAP_FLAG)
+
+        // Gray padding works well for YOLO-style letterboxing
+        canvas.drawARGB(255, 114, 114, 114)
+
+        val resized = Bitmap.createScaledBitmap(source, dstWidth, dstHeight, true)
+        canvas.drawBitmap(resized, left.toFloat(), top.toFloat(), paint)
+
         source.recycle()
-        return resized
+        resized.recycle()
+
+        return output
     }
 
     fun prepareModelBitmap(
@@ -76,7 +94,6 @@ object FramePreprocessor {
     ): Bitmap {
         val rgbaBitmap = imageProxyToBitmap(imageProxy)
         val rotated = rotateBitmap(rgbaBitmap, imageProxy.imageInfo.rotationDegrees)
-        val square = centerCropToSquare(rotated)
-        return resize(square, modelInputSize)
+        return letterboxResize(rotated, modelInputSize)
     }
 }
