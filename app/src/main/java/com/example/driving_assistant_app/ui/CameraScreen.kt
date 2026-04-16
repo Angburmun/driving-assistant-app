@@ -76,9 +76,6 @@ fun CameraScreen(
 
             DetectionOverlay(
                 detections = uiState.detections,
-                sourceFrameWidth = uiState.frameWidth,
-                sourceFrameHeight = uiState.frameHeight,
-                rotationDegrees = uiState.rotationDegrees,
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -202,6 +199,13 @@ private fun CameraInfoCard(
             detections.take(3).forEach { det ->
                 Text(
                     text = "${det.className} ${"%.2f".format(det.score)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            detections.firstOrNull()?.let { det ->
+                Text(
+                    text = "Box: ${"%.1f".format(det.left)}, ${"%.1f".format(det.top)}, ${"%.1f".format(det.right)}, ${"%.1f".format(det.bottom)}",
                     style = MaterialTheme.typography.bodySmall
                 )
             }

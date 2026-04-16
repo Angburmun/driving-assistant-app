@@ -93,10 +93,19 @@ class YoloDetector(
         val numCandidates = 8400
 
         for (i in 0 until numCandidates) {
-            val centerX = output[0][i]
-            val centerY = output[1][i]
-            val width = output[2][i]
-            val height = output[3][i]
+            var centerX = output[0][i]
+            var centerY = output[1][i]
+            var width = output[2][i]
+            var height = output[3][i]
+
+            val looksNormalized = maxOf(centerX, centerY, width, height) <= 2.0f
+
+            if (looksNormalized) {
+                centerX *= ModelConfig.MODEL_INPUT_SIZE
+                centerY *= ModelConfig.MODEL_INPUT_SIZE
+                width *= ModelConfig.MODEL_INPUT_SIZE
+                height *= ModelConfig.MODEL_INPUT_SIZE
+            }
 
             var bestClassIndex = -1
             var bestScore = 0f
