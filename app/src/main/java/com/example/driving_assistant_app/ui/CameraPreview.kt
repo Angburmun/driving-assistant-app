@@ -16,10 +16,11 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.driving_assistant_app.ml.FrameAnalyzer
+import com.example.driving_assistant_app.ml.ModelConfig
 import com.example.driving_assistant_app.ml.YoloDetection
 import com.example.driving_assistant_app.ml.YoloDetector
-import com.example.driving_assistant_app.ml.ModelConfig
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun CameraPreview(
@@ -39,10 +40,12 @@ fun CameraPreview(
     }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-    val detector = remember { YoloDetector(context, ModelConfig.MODEL_ASSET_PATH) }
+    val detector = remember { YoloDetector(context.applicationContext, ModelConfig.MODEL_ASSET_PATH) }
 
     DisposableEffect(lifecycleOwner, previewView) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+
+        var imageAnalysis: ImageAnalysis? = null
 
         val listener = Runnable {
             val cameraProvider = cameraProviderFuture.get()
@@ -62,13 +65,14 @@ fun CameraPreview(
                 onDetectionsReady = onDetectionsReady
             )
 
-            val imageAnalysis = ImageAnalysis.Builder()
+            val localImageAnalysis = ImageAnalysis.Builder()
                 .setTargetResolution(Size(1280, 720))
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
 
-            imageAnalysis.setAnalyzer(cameraExecutor, frameAnalyzer)
+            localImageAnalysis.setAnalyzer(cameraExecutor, frameAnalyzer)
+            imageAnalysis = localImageAnalysis
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -78,7 +82,7 @@ fun CameraPreview(
                     lifecycleOwner,
                     cameraSelector,
                     preview,
-                    imageAnalysis
+                    localImageAnalysis
                 )
             } catch (e: Exception) {
                 Log.e("CameraPreview", "Failed to bind camera use cases", e)
@@ -92,13 +96,26 @@ fun CameraPreview(
 
         onDispose {
             try {
+                imageAnalysis?.clearAnalyzer()
+            } catch (e: Exception) {
+                Log.e("CameraPreview", "Failed to clear analyzer", e)
+            }
+
+            try {
                 val cameraProvider = cameraProviderFuture.get()
                 cameraProvider.unbindAll()
             } catch (e: Exception) {
                 Log.e("CameraPreview", "Failed to unbind camera", e)
             }
-            detector.close()
+
             cameraExecutor.shutdown()
+            try {
+                cameraExecutor.awaitTermination(1, TimeUnit.SECONDS)
+            } catch (e: Exception) {
+                Log.e("CameraPreview", "Failed while waiting executor shutdown", e)
+            }
+
+            detector.close()
         }
     }
 

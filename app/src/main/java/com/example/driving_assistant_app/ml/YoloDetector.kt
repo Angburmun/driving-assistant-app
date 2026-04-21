@@ -12,13 +12,14 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import kotlin.math.max
 import kotlin.math.min
-import com.example.driving_assistant_app.ml.ModelConfig
 
 class YoloDetector(
     context: Context,
     private val modelPath: String
 ) {
     private val interpreter: Interpreter
+    @Volatile
+    private var closed = false
 
     init {
         val modelBuffer = loadModelFile(context.applicationContext, modelPath)
@@ -28,20 +29,29 @@ class YoloDetector(
         interpreter = Interpreter(modelBuffer, options)
     }
 
+    @Synchronized
     fun detect(
         bitmap: Bitmap,
         confidenceThreshold: Float = 0.35f,
         iouThreshold: Float = 0.45f,
         maxDetections: Int = 20
     ): YoloInferenceResult {
-        require(bitmap.width == 640 && bitmap.height == 640) {
-            "Expected 640x640 bitmap, got ${bitmap.width}x${bitmap.height}"
+        if (closed) {
+            return YoloInferenceResult(
+                detections = emptyList(),
+                inferenceTimeMs = 0f
+            )
+        }
+
+        require(bitmap.width == ModelConfig.MODEL_INPUT_SIZE &&
+                bitmap.height == ModelConfig.MODEL_INPUT_SIZE) {
+            "Expected ${ModelConfig.MODEL_INPUT_SIZE}x${ModelConfig.MODEL_INPUT_SIZE} bitmap, got ${bitmap.width}x${bitmap.height}"
         }
 
         val inputBuffer = bitmapToInputBuffer(bitmap)
 
         val output = Array(1) {
-            Array(47) {
+            Array(4 + ModelConfig.NUM_CLASSES) {
                 FloatArray(8400)
             }
         }
@@ -63,16 +73,20 @@ class YoloDetector(
         )
     }
 
+    @Synchronized
     fun close() {
+        if (closed) return
+        closed = true
         interpreter.close()
     }
 
     private fun bitmapToInputBuffer(bitmap: Bitmap): ByteBuffer {
-        val inputBuffer = ByteBuffer.allocateDirect(1 * 640 * 640 * 3 * 4)
+        val size = ModelConfig.MODEL_INPUT_SIZE
+        val inputBuffer = ByteBuffer.allocateDirect(1 * size * size * 3 * 4)
             .order(ByteOrder.nativeOrder())
 
-        val pixels = IntArray(640 * 640)
-        bitmap.getPixels(pixels, 0, 640, 0, 0, 640, 640)
+        val pixels = IntArray(size * size)
+        bitmap.getPixels(pixels, 0, size, 0, 0, size, size)
 
         for (pixel in pixels) {
             inputBuffer.putFloat(Color.red(pixel) / 255f)
@@ -99,7 +113,6 @@ class YoloDetector(
             var height = output[3][i]
 
             val looksNormalized = maxOf(centerX, centerY, width, height) <= 2.0f
-
             if (looksNormalized) {
                 centerX *= ModelConfig.MODEL_INPUT_SIZE
                 centerY *= ModelConfig.MODEL_INPUT_SIZE
@@ -120,10 +133,10 @@ class YoloDetector(
 
             if (bestScore < confidenceThreshold || bestClassIndex < 0) continue
 
-            val left = (centerX - width / 2f).coerceIn(0f, 640f)
-            val top = (centerY - height / 2f).coerceIn(0f, 640f)
-            val right = (centerX + width / 2f).coerceIn(0f, 640f)
-            val bottom = (centerY + height / 2f).coerceIn(0f, 640f)
+            val left = (centerX - width / 2f).coerceIn(0f, ModelConfig.MODEL_INPUT_SIZE.toFloat())
+            val top = (centerY - height / 2f).coerceIn(0f, ModelConfig.MODEL_INPUT_SIZE.toFloat())
+            val right = (centerX + width / 2f).coerceIn(0f, ModelConfig.MODEL_INPUT_SIZE.toFloat())
+            val bottom = (centerY + height / 2f).coerceIn(0f, ModelConfig.MODEL_INPUT_SIZE.toFloat())
 
             if (right <= left || bottom <= top) continue
 
