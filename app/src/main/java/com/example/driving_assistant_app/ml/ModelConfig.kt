@@ -1,11 +1,40 @@
 package com.example.driving_assistant_app.ml
 
 object ModelConfig {
-    const val MODEL_ASSET_PATH = "models/best_float32.tflite"
+    const val MODEL_ASSET_PATH = "models/best-SP_float32.tflite"
     const val MODEL_INPUT_SIZE = 640
-    const val NUM_CLASSES = 43
+    const val NUM_CLASSES = 25
+    const val NUM_CLASSES_OLD= 43
 
     val LABELS = listOf(
+        "Dual carriageway",
+        "End dual carriageway",
+        "End motorway",
+        "Mandatory direction",
+        "Max speed 100",
+        "Max speed 120",
+        "Max speed 20",
+        "Max speed 30",
+        "Max speed 40",
+        "Max speed 50",
+        "Max speed 60",
+        "Max speed 70",
+        "Max speed 80",
+        "Max speed 90",
+        "Motorway",
+        "No change direction",
+        "No left turn",
+        "No right turn",
+        "Pedestrian crossing",
+        "Prohibited entry",
+        "Roundabout",
+        "Speed bump",
+        "Stop",
+        "Work zone",
+        "Yield"
+    )
+
+    val LABELS_OLD = listOf(
         "speed limit 20",
         "speed limit 30",
         "speed limit 50",
