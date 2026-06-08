@@ -1,18 +1,11 @@
 package com.example.driving_assistant_app.ml
 
 object ModelConfig {
-    const val MODEL_ASSET_PATH = "models/best-SP_float32.tflite"
+    const val MODEL_ASSET_PATH = "models/hybrid_float32.tflite"
     const val MODEL_INPUT_SIZE = 640
-    const val NUM_CLASSES = 25
-    const val NUM_CLASSES_OLD= 43
+    const val NUM_CLASSES = 22
 
     val LABELS = listOf(
-        "Dual carriageway",
-        "End dual carriageway",
-        "End motorway",
-        "Mandatory direction",
-        "Max speed 100",
-        "Max speed 120",
         "Max speed 20",
         "Max speed 30",
         "Max speed 40",
@@ -21,62 +14,21 @@ object ModelConfig {
         "Max speed 70",
         "Max speed 80",
         "Max speed 90",
-        "Motorway",
-        "No change direction",
-        "No left turn",
-        "No right turn",
-        "Pedestrian crossing",
-        "Prohibited entry",
-        "Roundabout",
-        "Speed bump",
+        "Max speed 100",
+        "Max speed 120",
         "Stop",
+        "Yield",
+        "Prohibition",
+        "Mandatory direction",
+        "Warning",
+        "Pedestrian crossing",
         "Work zone",
-        "Yield"
-    )
+        "Roundabout",
+        "Priority",
+        "End restriction",
+        "No right turn",
+        "Dual carriageway",
+        "Speed bump"
 
-    val LABELS_OLD = listOf(
-        "speed limit 20",
-        "speed limit 30",
-        "speed limit 50",
-        "speed limit 60",
-        "speed limit 70",
-        "speed limit 80",
-        "restriction ends 80",
-        "speed limit 100",
-        "speed limit 120",
-        "no overtaking",
-        "no overtaking (trucks)",
-        "priority at next intersection",
-        "priority road",
-        "give way",
-        "stop",
-        "no traffic both ways",
-        "no trucks",
-        "no entry",
-        "danger",
-        "bend left",
-        "bend right",
-        "bend",
-        "uneven road",
-        "slippery road",
-        "road narrows",
-        "construction",
-        "traffic signal",
-        "pedestrian crossing",
-        "school crossing",
-        "cycles crossing",
-        "snow",
-        "animals",
-        "restriction ends",
-        "go right",
-        "go left",
-        "go straight",
-        "go right or straight",
-        "go left or straight",
-        "keep right",
-        "keep left",
-        "roundabout",
-        "restriction ends (overtaking)",
-        "restriction ends (overtaking (trucks))"
     )
 }
