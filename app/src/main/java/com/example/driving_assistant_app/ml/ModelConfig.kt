@@ -22,12 +22,11 @@ object ModelConfig {
         "Mandatory direction",
         "Warning",
         "Pedestrian crossing",
-        "Work zone",
+        "Road work",
         "Roundabout",
         "Priority",
         "End restriction",
-        "No right turn",
-        "Dual carriageway",
+        "Motorway",
         "Speed bump"
 
     )
