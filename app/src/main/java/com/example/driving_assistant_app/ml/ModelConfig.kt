@@ -1,33 +1,28 @@
 package com.example.driving_assistant_app.ml
 
 object ModelConfig {
-    const val MODEL_ASSET_PATH = "models/hybrid_float32.tflite"
+    const val MODEL_ASSET_PATH = "models/final.tflite"
     const val MODEL_INPUT_SIZE = 640
-    const val NUM_CLASSES = 22
+    const val NUM_CLASSES = 18
 
     val LABELS = listOf(
-        "Max speed 20",
-        "Max speed 30",
-        "Max speed 40",
-        "Max speed 50",
-        "Max speed 60",
-        "Max speed 70",
-        "Max speed 80",
-        "Max speed 90",
-        "Max speed 100",
-        "Max speed 120",
-        "Stop",
-        "Yield",
-        "Prohibition",
-        "Mandatory direction",
-        "Warning",
-        "Pedestrian crossing",
-        "Road work",
-        "Roundabout",
-        "Priority",
-        "End restriction",
-        "Motorway",
-        "Speed bump"
-
+        "Límite de velocidad",
+        "STOP",
+        "Prohibido el paso",
+        "Prohibido cambio de sentido",
+        "Prohibido girar a la izquierda",
+        "Prohibido girar a la derecha",
+        "Dirección obligatoria",
+        "Rotonda",
+        "Autovía",
+        "Final de autovía",
+        "Autopista",
+        "Final de autopista",
+        "Vía con prioridad",
+        "Ceda el paso",
+        "Peligro",
+        "Resalto elevado o baches",
+        "Peligro por nieve",
+        "Obras"
     )
 }
