@@ -6,6 +6,8 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import androidx.camera.core.ImageProxy
 import kotlin.math.roundToInt
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 
 object FramePreprocessor {
 
@@ -20,11 +22,7 @@ object FramePreprocessor {
         val rowStride = plane.rowStride
         val rowPadding = rowStride - pixelStride * width
 
-        val paddedBitmap = Bitmap.createBitmap(
-            width + rowPadding / pixelStride,
-            height,
-            Bitmap.Config.ARGB_8888
-        )
+        val paddedBitmap = createBitmap(width + rowPadding / pixelStride, height)
         paddedBitmap.copyPixelsFromBuffer(buffer)
 
         return if (rowPadding == 0) {
@@ -72,14 +70,14 @@ object FramePreprocessor {
         val left = (size - dstWidth) / 2
         val top = (size - dstHeight) / 2
 
-        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val output = createBitmap(size, size)
         val canvas = Canvas(output)
         val paint = Paint(Paint.FILTER_BITMAP_FLAG)
 
         // Gray padding works well for YOLO-style letterboxing
         canvas.drawARGB(255, 114, 114, 114)
 
-        val resized = Bitmap.createScaledBitmap(source, dstWidth, dstHeight, true)
+        val resized = source.scale(dstWidth, dstHeight)
         canvas.drawBitmap(resized, left.toFloat(), top.toFloat(), paint)
 
         source.recycle()

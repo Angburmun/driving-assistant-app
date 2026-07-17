@@ -21,12 +21,28 @@ class YoloDetector(
     @Volatile
     private var closed = false
 
+    private val inputShape: IntArray
+    private val inputIsNchw: Boolean
+
     init {
         val modelBuffer = loadModelFile(context.applicationContext, modelPath)
+
         val options = Interpreter.Options().apply {
             setNumThreads(4)
         }
+
         interpreter = Interpreter(modelBuffer, options)
+
+        inputShape = interpreter.getInputTensor(0).shape()
+
+        inputIsNchw =
+            inputShape.size == 4 &&
+                    inputShape[1] == 3
+
+        android.util.Log.i(
+            "YoloDetector",
+            "Input=${inputShape.contentToString()}, NCHW=$inputIsNchw"
+        )
     }
 
     @Synchronized
@@ -82,16 +98,45 @@ class YoloDetector(
 
     private fun bitmapToInputBuffer(bitmap: Bitmap): ByteBuffer {
         val size = ModelConfig.MODEL_INPUT_SIZE
-        val inputBuffer = ByteBuffer.allocateDirect(1 * size * size * 3 * 4)
+
+        val inputBuffer = ByteBuffer
+            .allocateDirect(size * size * 3 * 4)
             .order(ByteOrder.nativeOrder())
 
         val pixels = IntArray(size * size)
-        bitmap.getPixels(pixels, 0, size, 0, 0, size, size)
 
-        for (pixel in pixels) {
-            inputBuffer.putFloat(Color.red(pixel) / 255f)
-            inputBuffer.putFloat(Color.green(pixel) / 255f)
-            inputBuffer.putFloat(Color.blue(pixel) / 255f)
+        bitmap.getPixels(
+            pixels,
+            0,
+            size,
+            0,
+            0,
+            size,
+            size
+        )
+
+        if (inputIsNchw) {
+            // [1, 3, 640, 640]
+
+            for (pixel in pixels) {
+                inputBuffer.putFloat(Color.red(pixel) / 255f)
+            }
+
+            for (pixel in pixels) {
+                inputBuffer.putFloat(Color.green(pixel) / 255f)
+            }
+
+            for (pixel in pixels) {
+                inputBuffer.putFloat(Color.blue(pixel) / 255f)
+            }
+        } else {
+            // [1, 640, 640, 3]
+
+            for (pixel in pixels) {
+                inputBuffer.putFloat(Color.red(pixel) / 255f)
+                inputBuffer.putFloat(Color.green(pixel) / 255f)
+                inputBuffer.putFloat(Color.blue(pixel) / 255f)
+            }
         }
 
         inputBuffer.rewind()
